@@ -32,7 +32,7 @@ class AdminPanelProvider extends PanelProvider
             ->colors([
                 'primary' => Color::Blue,
             ])
-            ->brandLogo(asset('storage/' . (Empresa::first()?->image ?? 'images/default-logo.svg')))
+           // ->brandLogo(asset('storage/' . (Empresa::first()?->image ?? 'images/default-logo.svg')))
             ->brandLogoHeight('70px')
             ->favicon(asset('favicon.png'))
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
