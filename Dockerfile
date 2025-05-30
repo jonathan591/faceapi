@@ -1,6 +1,6 @@
 FROM php:8.2-fpm
 
-# Instalar dependencias del sistema y extensiones PHP necesarias
+# Instala dependencias necesarias
 RUN apt-get update && apt-get install -y \
     libicu-dev \
     libzip-dev \
@@ -15,28 +15,31 @@ RUN apt-get update && apt-get install -y \
     && docker-php-ext-configure gd --with-freetype --with-jpeg \
     && docker-php-ext-install intl zip pdo_mysql gd
 
-# Instalar Composer globalmente
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Instalar Composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiar archivos de la aplicación al contenedor
-COPY . /var/www/html
-
-# Establecer el directorio de trabajo
+# Establecer directorio de trabajo
 WORKDIR /var/www/html
 
-# Instalar dependencias PHP con Composer
+# Copiar archivos del proyecto
+COPY . .
+
+# Instalar dependencias PHP
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Ejecutar migraciones, seeders y crear super admin
+# Ejecutar migraciones y configuración inicial
+RUN php artisan config:clear && \
+    php artisan migrate --force && \
+    php artisan db:seed --force && \
+    php artisan shield:super-admin && \
+    php artisan storage:link
 
+# Exponer puerto que Render espera
+EXPOSE 8080
 
-# Ajustar permisos si es necesario (opcional, dependiendo de tu setup)
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
+# Arrancar Laravel en modo HTTP
+CMD php artisan serve --host 0.0.0.0 --port=8080
 
-
-
-# Comando para iniciar PHP-FPM
-CMD php artisan migrate --force && php artisan db:seed --force && php artisan shield:super-admin && php artisan serve --host=0.0.0.0 --port=${PORT}
 
 
 
