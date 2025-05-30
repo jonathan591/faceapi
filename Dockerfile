@@ -35,10 +35,10 @@ RUN php artisan config:clear && \
     php artisan storage:link
 
 # Exponer puerto que Render espera
-EXPOSE 8080
+EXPOSE 8000
 
 # Arrancar Laravel en modo HTTP
-CMD php artisan serve --host 0.0.0.0 --port=8080
+CMD php artisan serve --host 0.0.0.0 --port=8000
 
 
 
