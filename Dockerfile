@@ -28,17 +28,11 @@ COPY . .
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Ejecutar migraciones y configuración inicial
-RUN php artisan config:clear && \
-    php artisan migrate --force && \
-    php artisan db:seed --force && \
-    php artisan shield:super-admin && \
-    php artisan storage:link
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
 
-# Exponer puerto que Render espera
-EXPOSE 8000
+CMD ["/entrypoint.sh"]
 
-# Arrancar Laravel en modo HTTP
-CMD php artisan serve --host 0.0.0.0 --port=8000
 
 
 
