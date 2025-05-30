@@ -1,39 +1,36 @@
+# Usar imagen base oficial PHP con FPM
 FROM php:8.2-fpm
 
-# Instala dependencias del sistema
+# Instalar dependencias necesarias para intl y zip, además de otros útiles
 RUN apt-get update && apt-get install -y \
-    git \
-    curl \
+    libicu-dev \
+    libzip-dev \
     zip \
     unzip \
-    sqlite3 \
-    libsqlite3-dev \
-    libonig-dev \
-    libjpeg-dev \
-    libpng-dev \
-    libfreetype6-dev \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install pdo pdo_sqlite mbstring gd
+    git \
+    curl \
+    && docker-php-ext-configure intl \
+    && docker-php-ext-install intl zip pdo_mysql
 
-# Instala Composer
-COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
+# Instalar Composer (opcional, si no tienes Composer ya instalado)
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
 
-# Establece el directorio de trabajo
-WORKDIR /var/www
+# Copiar archivos del proyecto al contenedor (ajusta según tu estructura)
+COPY . /var/www/html
 
-# Copia el contenido del proyecto
-COPY . .
+# Establecer directorio de trabajo
+WORKDIR /var/www/html
 
-# Instala dependencias PHP del proyecto
+# Instalar dependencias PHP vía Composer
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Crea base de datos SQLite vacía
-RUN touch database/database.sqlite && chmod 664 database/database.sqlite
+# Ajustar permisos si es necesario
+# RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
-# Da permisos adecuados
-RUN chown -R www-data:www-data /var/www && chmod -R 775 storage bootstrap/cache
-
+# Exponer el puerto (opcional)
 EXPOSE 9000
 
+# Comando para correr PHP-FPM
 CMD ["php-fpm"]
+
 
