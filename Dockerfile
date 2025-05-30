@@ -1,45 +1,30 @@
-FROM php:8.2-fpm
+FROM php:8.2-fpm-alpine
 
-# Instalar dependencias del sistema y extensiones PHP necesarias
-RUN apt-get update && apt-get install -y \
-    libicu-dev \
+# Instala extensiones PHP necesarias, incluidas intl, gd, zip, etc
+RUN apk add --no-cache \
+    icu-dev \
     libzip-dev \
-    libpng-dev \
-    libjpeg-dev \
-    libfreetype6-dev \
-    zip \
-    unzip \
-    git \
-    curl \
-    && docker-php-ext-configure intl \
-    && docker-php-ext-configure gd --with-freetype --with-jpeg \
-    && docker-php-ext-install intl zip pdo_mysql gd
+    oniguruma-dev \
+    autoconf \
+    gcc \
+    g++ \
+    make \
+    bash \
+    && docker-php-ext-install intl zip pdo_mysql gd \
+    && apk del icu-dev libzip-dev autoconf gcc g++ make
 
-# Instalar Composer globalmente
-RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+# Instala composer
+COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
-# Copiar archivos de la aplicación al contenedor
-COPY . /var/www/html
-
-# Establecer el directorio de trabajo
 WORKDIR /var/www/html
 
-# Instalar dependencias PHP con Composer
+COPY . .
+
 RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
-# Ejecutar migraciones, seeders y crear super admin
-RUN php artisan migrate --force && \
-    php artisan db:seed --force && \
-    php artisan shield:super-admin
+# Copiar permisos, configurar .env, etc si necesitas
 
-# Ajustar permisos si es necesario (opcional, dependiendo de tu setup)
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
-
-# Exponer el puerto que usa PHP-FPM
-EXPOSE 9000
-
-# Comando para iniciar PHP-FPM
-CMD ["php-fpm"]
+CMD php artisan migrate --force && php artisan db:seed --force && php artisan shield:super-admin && php artisan serve --host=0.0.0.0 --port=${PORT}
 
 
 
