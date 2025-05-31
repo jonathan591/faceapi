@@ -12,6 +12,6 @@ php artisan migrate --force
 php artisan db:seed --force
 
 php artisan storage:link --force
-php artisan shield:super-admin --user=admin@gmail.com
+php artisan shield:super-admin 
 # Finalmente arranca el servidor
 php artisan serve --host=0.0.0.0 --port=8000
